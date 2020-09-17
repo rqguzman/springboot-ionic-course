@@ -10,8 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
 @Entity
 public class Categoria implements Serializable {
 	
@@ -22,7 +20,15 @@ public class Categoria implements Serializable {
 	private Integer id;
 	private String nome;
 	
-	@JsonManagedReference
+	/* O uso de @JsonManagedReference causou problemas quando tentou-se enviar
+	 * os dados via JSON em requisições de inclusão de novas categorias.
+	 * Ainda em SET/2020 essas restrições se mantém.
+	 * assim, em todas as entidades de domínio que tinham essa anotação, 
+	 * o instrutor orientou que a anotaçõa fosse apagada.
+	 * Já nas entidades onde estava a anotação @JsonBackReference, 
+	 * essa última foi substituída por @JsonIgnore, ainda que essa não seja
+	 * a finalidade ideal dessa anotação. */
+	//@JsonManagedReference
 	@ManyToMany(mappedBy = "categorias")
 	private List<Produto> produtos = new ArrayList<>();
 

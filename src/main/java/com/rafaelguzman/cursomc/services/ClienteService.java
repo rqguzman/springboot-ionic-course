@@ -1,12 +1,20 @@
 package com.rafaelguzman.cursomc.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.rafaelguzman.cursomc.domain.Cliente;
+import com.rafaelguzman.cursomc.dto.ClienteDTO;
 import com.rafaelguzman.cursomc.repositories.ClienteRepository;
+import com.rafaelguzman.cursomc.resources.ClienteResource;
+import com.rafaelguzman.cursomc.services.exceptions.DataIntegrityException;
 import com.rafaelguzman.cursomc.services.exceptions.ObjectNotFoundException;
 
 @Service
@@ -14,10 +22,60 @@ public class ClienteService {
 
 	@Autowired
 	private ClienteRepository repo;
-	
+
 	public Cliente find(Integer id) {
 		Optional<Cliente> obj = repo.findById(id);
 		return obj.orElseThrow(() -> new ObjectNotFoundException(
-                "Objeto não encontrado! Id: " + id + ", Tipo: " + Cliente.class.getName()));
+				"Objeto não encontrado! Id: " + id + ", Tipo: " + Cliente.class.getName()));
+	}
+
+	public Cliente update(Cliente obj) {
+		Cliente newObj = find(obj.getId());
+		updateData(newObj, obj);
+		return repo.save(newObj);
+	}
+
+	public void delete(Integer id) {
+		find(id);
+
+		try {
+			repo.deleteById(id);
+		} catch (DataIntegrityViolationException e) {
+			throw new DataIntegrityException("Não é possível excluir um cliente que possui Pedidos.");
+		}
+	}
+
+	public List<Cliente> findAll() {
+		return repo.findAll();
+	}
+
+	public Page<Cliente> findPage(Integer page, Integer linesPerPage, String direction, String orderBy) {
+		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
+		return repo.findAll(pageRequest);
+	}
+
+	/**
+	 * Mét. Aux. Convertendo um objeto ClienteDTO para Cliente
+	 * 
+	 * @param 1 objeto DTO do Tipo Categoria
+	 * @return 1 objeto do Tipo Cliente Aplicação:
+	 * @see ClienteResource.java
+	 */
+	public Cliente fromDTO(ClienteDTO objDTO) {
+		return new Cliente(objDTO.getId(), objDTO.getNome(), objDTO.getEmail(), null, null);
+	}
+
+	/**
+	 * Mét. Aux. Atualiza um objeto Cliente a partir de um Obj recebido como
+	 * argumento Na atualização de um cliente, recebemos apenas o nome e o email
+	 * desse cliente. o CPF/CNPJ e o Tipo do cliente permanecem inalterados. Para
+	 * evitar que esses campos fiquem com o valor nulo, é preciso buscar essas
+	 * informações na base de dados.
+	 * 
+	 * @param 1 objeto do Tipo Cliente
+	 */
+	private void updateData(Cliente newObj, Cliente obj) {
+		newObj.setNome(obj.getNome());
+		newObj.setEmail(obj.getEmail());
 	}
 }

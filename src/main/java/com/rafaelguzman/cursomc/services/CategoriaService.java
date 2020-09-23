@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.rafaelguzman.cursomc.domain.Categoria;
 import com.rafaelguzman.cursomc.dto.CategoriaDTO;
 import com.rafaelguzman.cursomc.repositories.CategoriaRepository;
+import com.rafaelguzman.cursomc.resources.CategoriaResource;
 import com.rafaelguzman.cursomc.services.exceptions.DataIntegrityException;
 import com.rafaelguzman.cursomc.services.exceptions.ObjectNotFoundException;
 
@@ -34,7 +35,8 @@ public class CategoriaService {
 	}
 
 	public Categoria update(Categoria obj) {
-		find(obj.getId());
+		Categoria newObj = find(obj.getId());
+		updateData(newObj, obj);
 		return repo.save(obj);
 	}
 
@@ -67,6 +69,16 @@ public class CategoriaService {
 	 */
 	public Categoria fromDTO(CategoriaDTO objDTO) {
 		return new Categoria(objDTO.getId(), objDTO.getNome());
+	}
+	
+	/**
+	 * Mét. Aux. Atualiza um objeto Categoria a partir de um Obj recebido como
+	 * argumento.
+	 * 
+	 * @param 2 objetos do Tipo Categoria
+	 */
+	private void updateData(Categoria newObj, Categoria obj) {
+		newObj.setNome(obj.getNome());
 	}
 
 }

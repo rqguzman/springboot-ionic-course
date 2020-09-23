@@ -56,11 +56,17 @@ public class CategoriaService {
 		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
 		return repo.findAll(pageRequest);
 	}
-	
-	/* Convertendo um Categoria DTO para Categoria*/ 
+
+	/**
+	 * Mét. Aux. Convertendo um objeto CategoriaDTO para Categoria
+	 * 
+	 * @param 1 objeto DTO do Tipo categoria
+	 * @return 1 objeto do Tipo Categoria 
+	 * Aplicação:
+	 * @see CategoriaResource.java
+	 */
 	public Categoria fromDTO(CategoriaDTO objDTO) {
 		return new Categoria(objDTO.getId(), objDTO.getNome());
 	}
-	
-	
+
 }

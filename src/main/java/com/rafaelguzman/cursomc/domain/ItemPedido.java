@@ -31,7 +31,14 @@ public class ItemPedido implements Serializable {
 		this.quantidade = quantidade;
 		this.preco = preco;
 	}
-
+	
+	/**
+	 * @return O subtotal de um Item de pedido
+	 * */
+	public double getSubTotal()	{
+		return (preco - desconto) * quantidade;
+	}
+	
 	// PARA ACESSAR PEDIDO E PRODUTO FORA DA CLASSE ItemPedido
 	@JsonIgnore // IMPEDE A SERIALIZAÇÃO DO PEDIDO ASSOCIADO AO ITEM(REF. CÍCLICA)
 	public Pedido getPedido() {

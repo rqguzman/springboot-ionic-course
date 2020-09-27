@@ -33,6 +33,9 @@ public class PedidoService {
 	
 	@Autowired
 	private ProdutoService produtoService;
+
+	@Autowired
+	private ClienteService clienteService;
 	
 	public Pedido find(Integer id) {
 		Optional<Pedido> obj = repo.findById(id);
@@ -45,6 +48,7 @@ public class PedidoService {
 
 		obj.setId(null);// Garantindo que seja um novo pedido
 		obj.setInstante(new Date());
+		obj.setCliente(clienteService.find(obj.getCliente().getId()));
 		obj.getPagamento().setEstado(EstadoPagamento.PENDENTE);
 		obj.getPagamento().setPedido(obj);
 		if (obj.getPagamento() instanceof PagamentoComBoleto) {// "Preenche" uma data Venc.
@@ -55,12 +59,14 @@ public class PedidoService {
 		pagamentoRepository.save(obj.getPagamento());// salva o pagto
 		for (ItemPedido itemPedido : obj.getItens()) {// percorre os itens de pedido
 			itemPedido.setDesconto(0.0);// seta o valos do desconto
+			itemPedido.setProduto(produtoService.find(itemPedido.getProduto().getId()));
 			// localiza o preco do produto de um item e seta o valor:
-			itemPedido.setPreco(produtoService.find(itemPedido.getProduto().getId()).getPreco());
+			itemPedido.setPreco(itemPedido.getProduto().getPreco());
 			itemPedido.setPedido(obj);// associa o item do pedido ao pedido
 		}// prepara os itens para ser salvos no banco de dados
 		
 		itemPedidoRepository.saveAll(obj.getItens());
+		System.out.println(obj);
 		return obj;
 	}
 }

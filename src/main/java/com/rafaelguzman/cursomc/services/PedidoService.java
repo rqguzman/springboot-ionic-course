@@ -69,7 +69,7 @@ public class PedidoService {
 		}// prepara os itens para ser salvos no banco de dados
 		
 		itemPedidoRepository.saveAll(obj.getItens());
-		emailService.sendOrderConfirmationEmail(obj);
+		emailService.sendOrderConfirmationHtmlEmail(obj);
 		return obj;
 	}
 }

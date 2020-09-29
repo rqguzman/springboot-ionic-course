@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -55,8 +56,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	/*
-	 * Autenticação básica de CORS Permite o acesso CORS. Necessário nesta etapa de
-	 * desenvolvimento e testes
+	 * Autenticação básica de CORS Permite o acesso CORS. 
+	 * Necessário nesta etapa de desenvolvimento e testes
 	 */
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
@@ -65,5 +66,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		/* Concede acesso básico aos endpoints por requisições de múltiplas fontes */
 		source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
 		return source;
+	}
+
+	/*
+	 * Disponibiliza um componente de criptografia de senhas para injeção
+	 */
+	@Bean
+	public BCryptPasswordEncoder bCryptPasswordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 }

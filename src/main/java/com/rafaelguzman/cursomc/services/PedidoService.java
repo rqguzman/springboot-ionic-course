@@ -4,9 +4,13 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.rafaelguzman.cursomc.domain.Cliente;
 import com.rafaelguzman.cursomc.domain.ItemPedido;
 import com.rafaelguzman.cursomc.domain.PagamentoComBoleto;
 import com.rafaelguzman.cursomc.domain.Pedido;
@@ -14,13 +18,15 @@ import com.rafaelguzman.cursomc.domain.enums.EstadoPagamento;
 import com.rafaelguzman.cursomc.repositories.ItemPedidoRepository;
 import com.rafaelguzman.cursomc.repositories.PagamentoRepository;
 import com.rafaelguzman.cursomc.repositories.PedidoRepository;
+import com.rafaelguzman.cursomc.security.UserSS;
+import com.rafaelguzman.cursomc.services.exceptions.AuthorizationException;
 import com.rafaelguzman.cursomc.services.exceptions.ObjectNotFoundException;
 
 @Service
 public class PedidoService {
 
 	@Autowired
-	private PedidoRepository repo;
+	private PedidoRepository pedidoRepository;
 	
 	@Autowired 
 	private PagamentoRepository pagamentoRepository;
@@ -41,7 +47,7 @@ public class PedidoService {
 	private EmailService emailService;
 	
 	public Pedido find(Integer id) {
-		Optional<Pedido> obj = repo.findById(id);
+		Optional<Pedido> obj = pedidoRepository.findById(id);
 		return obj.orElseThrow(() -> new ObjectNotFoundException(
                 "Objeto não encontrado! Id: " + id + ", Tipo: " + Pedido.class.getName()));
 	}
@@ -58,7 +64,7 @@ public class PedidoService {
 			PagamentoComBoleto pagto = (PagamentoComBoleto) obj.getPagamento();
 			boletoService.preencherPagamentoComBoleto(pagto, obj.getInstante());
 		}
-		obj = repo.save(obj);// salva o pedido
+		obj = pedidoRepository.save(obj);// salva o pedido
 		pagamentoRepository.save(obj.getPagamento());// salva o pagto
 		for (ItemPedido itemPedido : obj.getItens()) {// percorre os itens de pedido
 			itemPedido.setDesconto(0.0);// seta o valos do desconto
@@ -71,5 +77,18 @@ public class PedidoService {
 		itemPedidoRepository.saveAll(obj.getItens());
 		emailService.sendOrderConfirmationHtmlEmail(obj);
 		return obj;
+	}
+	
+	public Page<Pedido> findPage(Integer page, Integer linesPerPage, String direction, String orderBy) {
+		
+		UserSS user = UserService.authenticated();
+		
+		if (user == null) {
+			throw new AuthorizationException("Acesso negado.");
+		}
+		
+		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
+		Cliente cliente = clienteService.find(user.getId());
+		return pedidoRepository.findByCliente(cliente, pageRequest);
 	}
 }

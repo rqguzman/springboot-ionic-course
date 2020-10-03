@@ -33,7 +33,7 @@ import com.rafaelguzman.cursomc.services.exceptions.ObjectNotFoundException;
 public class ClienteService {
 
 	@Autowired
-	private ClienteRepository repo;
+	private ClienteRepository clienteRepository;
 	
 	@Autowired
 	private EnderecoRepository enderecoRepository;
@@ -52,7 +52,7 @@ public class ClienteService {
 			throw new AuthorizationException("Acesso negado.");
 		}
 		
-		Optional<Cliente> obj = repo.findById(id);
+		Optional<Cliente> obj = clienteRepository.findById(id);
 		return obj.orElseThrow(() -> new ObjectNotFoundException(
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Cliente.class.getName()));
 	}
@@ -60,7 +60,7 @@ public class ClienteService {
 	@Transactional
 	public Cliente insert(Cliente obj) {
 		obj.setId(null);// Garantindo que SEJA um novo objeto.
-		obj = repo.save(obj);
+		obj = clienteRepository.save(obj);
 		enderecoRepository.saveAll(obj.getEnderecos());
 		return obj;
 	}
@@ -68,26 +68,26 @@ public class ClienteService {
 	public Cliente update(Cliente obj) {
 		Cliente newObj = find(obj.getId());
 		updateData(newObj, obj);
-		return repo.save(newObj);
+		return clienteRepository.save(newObj);
 	}
 
 	public void delete(Integer id) {
 		find(id);
 
 		try {
-			repo.deleteById(id);
+			clienteRepository.deleteById(id);
 		} catch (DataIntegrityViolationException e) {
 			throw new DataIntegrityException("Não é possível excluir porque há pedidos relacionados.");
 		}
 	}
 
 	public List<Cliente> findAll() {
-		return repo.findAll();
+		return clienteRepository.findAll();
 	}
 
 	public Page<Cliente> findPage(Integer page, Integer linesPerPage, String direction, String orderBy) {
 		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
-		return repo.findAll(pageRequest);
+		return clienteRepository.findAll(pageRequest);
 	}
 
 	/**
@@ -143,6 +143,19 @@ public class ClienteService {
 	}
 	
 	public URI uploadProfilePicture(MultipartFile multipartFile) {
-		return s3Service.uploadFile(multipartFile);
+	
+		UserSS user = UserService.authenticated();
+		
+		if (user == null) {
+			throw new AuthorizationException("Acesso negado.");
+		}
+		
+		URI uri = s3Service.uploadFile(multipartFile);
+		
+		Cliente cli = clienteRepository.findByEmail(user.getUsername());
+		cli.setImageUrl(uri.toString());
+		clienteRepository.save(cli);	
+		
+		return uri;
 	}
 }

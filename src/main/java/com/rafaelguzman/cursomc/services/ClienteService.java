@@ -1,10 +1,12 @@
 package com.rafaelguzman.cursomc.services;
 
+import java.awt.image.BufferedImage;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,24 +36,30 @@ public class ClienteService {
 
 	@Autowired
 	private ClienteRepository clienteRepository;
-	
+
 	@Autowired
 	private EnderecoRepository enderecoRepository;
-	
+
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
-	
+
 	@Autowired
 	private S3Service s3Service;
 
+	@Autowired
+	private ImageService imageService;
+
+	@Value("${img.prefix.client.profile}")
+	private String prefix;
+
 	public Cliente find(Integer id) {
-	
+
 		UserSS user = UserService.authenticated();
-		
+
 		if (user == null || !user.hasRole(Perfil.ADMIN) && !id.equals(user.getId())) {
 			throw new AuthorizationException("Acesso negado.");
 		}
-		
+
 		Optional<Cliente> obj = clienteRepository.findById(id);
 		return obj.orElseThrow(() -> new ObjectNotFoundException(
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Cliente.class.getName()));
@@ -94,8 +102,7 @@ public class ClienteService {
 	 * Mét. Aux. Convertendo um objeto ClienteDTO para Cliente
 	 * 
 	 * @param 1 objeto DTO do Tipo ClienteDTO
-	 * @return 1 objeto do Tipo Cliente
-	 * Aplicação:
+	 * @return 1 objeto do Tipo Cliente Aplicação:
 	 * @see ClienteResource.java
 	 */
 	public Cliente fromDTO(ClienteDTO objDTO) {
@@ -103,12 +110,11 @@ public class ClienteService {
 	}
 
 	/**
-	 * Mét. Aux. Convertendo um objeto ClienteNewDTO para Cliente
-	 * Converte um cliente recebido no corpo da requisição.
+	 * Mét. Aux. Convertendo um objeto ClienteNewDTO para Cliente Converte um
+	 * cliente recebido no corpo da requisição.
 	 * 
 	 * @param 1 objeto DTO do Tipo ClienteNewDTO
-	 * @return 1 objeto do Tipo Cliente 
-	 * Aplicação:
+	 * @return 1 objeto do Tipo Cliente Aplicação:
 	 * @see ClienteResource.java
 	 */
 	public Cliente fromDTO(ClienteNewDTO objDTO) {
@@ -120,10 +126,10 @@ public class ClienteService {
 		cli.getEnderecos().add(end);
 		cli.getTelefones().add(objDTO.getTelefone1());
 		if (objDTO.getTelefone2() != null) {
-			cli.getTelefones().add(objDTO.getTelefone2());			
+			cli.getTelefones().add(objDTO.getTelefone2());
 		}
 		if (objDTO.getTelefone3() != null) {
-			cli.getTelefones().add(objDTO.getTelefone3());			
+			cli.getTelefones().add(objDTO.getTelefone3());
 		}
 		return cli;
 	}
@@ -142,20 +148,19 @@ public class ClienteService {
 		newObj.setEmail(obj.getEmail());
 	}
 	
+	/* Upload de imagem para o Amazon S3 */
+
 	public URI uploadProfilePicture(MultipartFile multipartFile) {
-	
+
 		UserSS user = UserService.authenticated();
-		
+
 		if (user == null) {
 			throw new AuthorizationException("Acesso negado.");
 		}
-		
-		URI uri = s3Service.uploadFile(multipartFile);
-		
-		Cliente cli = clienteRepository.findByEmail(user.getUsername());
-		cli.setImageUrl(uri.toString());
-		clienteRepository.save(cli);	
-		
-		return uri;
+
+		BufferedImage jpgImage = imageService.getJpgImageFromFile(multipartFile);
+		String filename = prefix + user.getId() + ".jpg";
+
+		return s3Service.uploadFile(imageService.getInputStream(jpgImage, "jpg"), filename, "image");
 	}
 }

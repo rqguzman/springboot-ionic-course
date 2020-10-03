@@ -52,7 +52,7 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -69,8 +69,8 @@
 			<artifactId>hibernate-validator</artifactId>
 			<version>6.1.5.Final</version>
 		</dependency>
-		
-	<!-- MAIL SERVICES -->
+
+		<!-- MAIL SERVICES -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
@@ -92,7 +92,7 @@
 			<artifactId>jjwt</artifactId>
 			<version>0.7.0</version>
 		</dependency>
-		
+
 	<!-- IMAGENS AMAZON S3 -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
@@ -105,7 +105,12 @@
 			<artifactId>commons-io</artifactId>
 			<version>LATEST</version>
 		</dependency>
-			
+
+		<dependency>
+			<groupId>org.imgscalr</groupId>
+			<artifactId>imgscalr-lib</artifactId>
+			<version>4.2</version>
+		</dependency>
 
 	</dependencies>
 

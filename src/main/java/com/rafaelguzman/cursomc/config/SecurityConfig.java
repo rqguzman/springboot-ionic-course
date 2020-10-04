@@ -1,3 +1,4 @@
+
 package com.rafaelguzman.cursomc.config;
 
 import java.util.Arrays;
@@ -90,10 +91,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	 */
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
+		
+		CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues();
+		corsConfiguration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "DELETE", "OPTION"));
 		final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-		/* Concede acesso básico aos endpoints por requisições de múltiplas fontes */
-		source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
+		source.registerCorsConfiguration("/**", corsConfiguration);
 		return source;
 	}
 
